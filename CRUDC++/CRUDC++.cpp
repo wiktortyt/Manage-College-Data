@@ -34,10 +34,10 @@ int main()
             int choiceCrOp = -1;
             std::cin >> choiceCrOp;
             if (choiceCrOp == CREATEFILE && std::cin.good()) {
-                std::unique_ptr<DatabaseOperation> dbOpPtr = std::make_unique<DatabaseOperation>(DatabaseOperation(currentDir, std::ios::binary));
+                std::unique_ptr<DatabaseOperation> dbOpPtr = std::make_unique<DatabaseOperation>(DatabaseOperation(currentDir, std::ios::binary| std::ios::trunc));
                 dbOpPtr->writeToDB();
             }else if(choiceCrOp== APPENDFILE && std::cin.good()){
-                std::unique_ptr<DatabaseOperation> dbOpPtr = std::make_unique<DatabaseOperation>(DatabaseOperation(currentDir, std::ios::binary|std::ios::app));
+                std::unique_ptr<DatabaseOperation> dbOpPtr = std::make_unique<DatabaseOperation>(DatabaseOperation(currentDir, std::ios::binary|std::ios::ate));
                 dbOpPtr->writeToDB();
             }
             else {
@@ -51,7 +51,7 @@ int main()
     else if (choice == READ) {
         try {
             //ios::app to not delete data before reading
-            std::unique_ptr<DatabaseOperation> dbOpPtr = std::make_unique<DatabaseOperation>(DatabaseOperation(currentDir, std::ios::binary|std::ios::app));
+            std::unique_ptr<DatabaseOperation> dbOpPtr = std::make_unique<DatabaseOperation>(DatabaseOperation(currentDir, std::ios::binary|std::ios::ate));
             dbOpPtr->readFromDB();
         }
         catch (std::exception& ex) {

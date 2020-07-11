@@ -15,8 +15,11 @@ DatabaseOperation::DatabaseOperation(DatabaseOperation&& dbOp) noexcept
 
 DatabaseOperation::DatabaseOperation(std::filesystem::path DBFileName,std::ios_base::openmode openMode)
 	: _DBFileName(DBFileName),_openMode(openMode) {
-	_outFileStream.open(DBFileName,openMode);
-	_inFileStream.open(DBFileName, openMode);
+	//using ios::in to not erase file
+	_outFileStream.open(DBFileName,openMode | std::ios::in | std::ios::out);
+	//erasing ios::ate to not erase file
+	int openModeForInStream = _openMode & (~std::ios::ate);
+	_inFileStream.open(DBFileName, openModeForInStream);
 }
 
 DatabaseOperation& DatabaseOperation::operator=(DatabaseOperation&& dbOp) noexcept {
@@ -37,18 +40,28 @@ void DatabaseOperation::writeToDB() {
 		//helps at reading file
 		std::string endingChars="&";
 		int posOfAmp = -1;
-		if ((_openMode & std::ios::app) == std::ios::app) {
-			_inFileStream.seekg(std::ios::end);
+		//if appending to file
+		if ((_openMode & std::ios::ate) == std::ios::ate) {
+			_inFileStream.seekg(0,std::ios::end);
 			int size = _inFileStream.tellg();
 			for (size_t i = 0; i < size; i++)
 			{
+				_inFileStream.seekg(i);
 				char c = static_cast<char>(_inFileStream.get());
 				if (c == '&')
-					posOfAmp = _inFileStream.tellg();
+					posOfAmp = (int)_inFileStream.tellg() - 1 ;
 			}
 			if (posOfAmp > -1) {
+				endingChars = "&";
+				std::filebuf* temp = _inFileStream.rdbuf();
+				temp->pubseekpos(posOfAmp, std::ios::in);
+				char endingChar = '\0';
+				while ((endingChar = (char)temp->snextc() )!= std::char_traits<char>::eof()) {
+					endingChars += endingChar;
+				};
+				
 				_outFileStream.seekp(posOfAmp);
-				endingChars = "";
+				int a = _outFileStream.tellp();
 			}
 		}
 		int choice = -1;
@@ -75,6 +88,9 @@ void DatabaseOperation::writeToDB() {
 				break;
 			}
 		} while (choice != -1);
+
+		int a = _outFileStream.tellp();
+		_outFileStream.flush();
 		_outFileStream.write(endingChars.c_str(), endingChars.size());
 	}
 	else {
@@ -101,6 +117,7 @@ void DatabaseOperation::addEmployee()
 		}
 		std::unique_ptr<Employee> employeePtr = std::make_unique<Employee>(Employee(experienceInTeaching, name, surname, yearOfBirth));
 
+		int a = _outFileStream.tellp();
 		_outFileStream.write(reinterpret_cast<char*>(employeePtr.get()), sizeof(Employee));
 		if (_outFileStream.good())
 			std::cout << "Employee written!" << std::endl;

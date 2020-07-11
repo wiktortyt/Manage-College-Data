@@ -15,7 +15,7 @@ public:
 	
 	DatabaseOperation(DatabaseOperation&& dbOp) noexcept;
 
-	//we don't want to copy streams
+	//we don't want to copy file streams
 	DatabaseOperation& operator=(const DatabaseOperation& dbOp) = delete;
 
 	DatabaseOperation& operator=(DatabaseOperation&& dbOp) noexcept;
