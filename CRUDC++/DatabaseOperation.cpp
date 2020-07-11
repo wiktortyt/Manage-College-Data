@@ -8,12 +8,13 @@
 DatabaseOperation::DatabaseOperation(DatabaseOperation&& dbOp) noexcept
 	: _DBFileName(std::move(dbOp._DBFileName)),
 	_outFileStream(std::move(dbOp._outFileStream)),
-	_inFileStream(std::move(dbOp._inFileStream)) {
+	_inFileStream(std::move(dbOp._inFileStream)),
+	_openMode(dbOp._openMode){
 
 }
 
 DatabaseOperation::DatabaseOperation(std::filesystem::path DBFileName,std::ios_base::openmode openMode)
-	: _DBFileName(DBFileName) {
+	: _DBFileName(DBFileName),_openMode(openMode) {
 	_outFileStream.open(DBFileName,openMode);
 	_inFileStream.open(DBFileName, openMode);
 }
@@ -25,6 +26,7 @@ DatabaseOperation& DatabaseOperation::operator=(DatabaseOperation&& dbOp) noexce
 	_outFileStream = std::move(dbOp._outFileStream);
 	_inFileStream = std::move(dbOp._inFileStream);
 	dbOp._DBFileName = "";
+	_openMode = dbOp._openMode;
 	return *this;
 }
 
@@ -34,7 +36,21 @@ void DatabaseOperation::writeToDB() {
 		//char at the end of file which signifies what was written to file
 		//helps at reading file
 		std::string endingChars="&";
-
+		int posOfAmp = -1;
+		if ((_openMode & std::ios::app) == std::ios::app) {
+			_inFileStream.seekg(std::ios::end);
+			int size = _inFileStream.tellg();
+			for (size_t i = 0; i < size; i++)
+			{
+				char c = static_cast<char>(_inFileStream.get());
+				if (c == '&')
+					posOfAmp = _inFileStream.tellg();
+			}
+			if (posOfAmp > -1) {
+				_outFileStream.seekp(posOfAmp);
+				endingChars = "";
+			}
+		}
 		int choice = -1;
 		do {
 			std::cout << "Select what you want to write:\n"
@@ -69,12 +85,12 @@ void DatabaseOperation::writeToDB() {
 void DatabaseOperation::addEmployee()
 {
 	if (_outFileStream.good()) {
-		std::string name, surname;
+		std::array< char, 100> name, surname;
 		unsigned short yearOfBirth, experienceInTeaching;
 		std::cout << "Name: ";
-		std::cin >> name;
+		std::cin >> name.data();
 		std::cout << "Surname: ";
-		std::cin >> surname;
+		std::cin >> surname.data();
 		std::cout << "Year of birth: ";
 		std::cin >> yearOfBirth;
 		std::cout << "Experience in teaching(years): ";
@@ -99,12 +115,12 @@ void DatabaseOperation::addEmployee()
 void DatabaseOperation::addStudent()
 {
 	if (_outFileStream.good()) {
-		std::string name, surname;
+		std::array< char, 100> name, surname;
 		unsigned short yearOfBirth, yearOfLearning;
 		std::cout << "Name: ";
-		std::cin >> name;
+		std::cin >> name.data();
 		std::cout << "Surname: ";
-		std::cin >> surname;
+		std::cin >> surname.data();
 		std::cout << "Year of birth: ";
 		std::cin >> yearOfBirth;
 		std::cout << "Year of learning: ";
@@ -153,8 +169,8 @@ void DatabaseOperation::readFromDB()
 
 		//position of record which we read(in endingChars)
 		int posOfData = 0;
-		//reading data
-		for (int i = 0; i < size; i++)
+		//reading data until end of employee objects
+		for (int i = 0; i < size - endingChars.size() -1;)
 		{
 			_inFileStream.seekg(i, std::ios::beg);
 			char typeOfRecord=255;
@@ -171,8 +187,9 @@ void DatabaseOperation::readFromDB()
 				std::shared_ptr<Employee> employee = read<Employee>(i);
 				i += sizeof(Employee);
 				std::cout << "Experience in teaching: " << employee->experienceInTeaching() << std::endl;
-				std::cout << "Name: " << employee->name() << std::endl;
-				//std::cout << "Surname: " << employee->
+				std::cout << "Name: " << employee->name().data() << std::endl;
+				std::cout << "Surname: " << employee->surname().data() << std::endl;
+				std::cout << "Year of birth: " << employee->yearOfBirth() << std::endl;
 			}
 				break;
 			default:

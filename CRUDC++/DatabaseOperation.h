@@ -7,6 +7,7 @@ class DatabaseOperation {
 	std::filesystem::path _DBFileName;
 	std::ofstream _outFileStream;
 	std::ifstream _inFileStream;
+	std::ios_base::openmode _openMode;
 public:
 	DatabaseOperation(std::filesystem::path DBFileName, std::ios_base::openmode openMode);
 
