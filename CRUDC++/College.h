@@ -25,7 +25,7 @@ struct CollegeHash {
 
 class College
 {
-	//additional category and info provided by user (map<category,info>), can't serialize std::string
+	//additional category and info provided by user (map<category,info>, info = set<>), can't serialize std::string, todo
 	//std::unordered_map<std::array<char,100>, std::unordered_set< std::array<char,100>,CollegeHash>,CollegeHash> _additionalCategoryAndData;
 	//stored employees of college
 	std::vector<Employee> _employees;

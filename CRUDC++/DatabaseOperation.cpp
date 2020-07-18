@@ -74,6 +74,7 @@ void DatabaseOperation::writeToDB() {
 		if ((_openMode & std::ios::ate) == std::ios::ate) {
 			_inFileStream.seekg(0,std::ios::end);
 			int size = _inFileStream.tellg();
+			//get position of meaningful apersand
 			for (size_t i = 0; i < size; i++)
 			{
 				_inFileStream.seekg(i);
@@ -81,6 +82,7 @@ void DatabaseOperation::writeToDB() {
 				if (c == '&')
 					posOfAmp = (int)_inFileStream.tellg() - 1 ;
 			}
+			//if there is no ampersand you are writing first record
 			if (posOfAmp > -1) {
 				endingChars = "&";
 				std::filebuf* temp = _inFileStream.rdbuf();
@@ -123,7 +125,6 @@ void DatabaseOperation::writeToDB() {
 			}
 		} while (choice != -1);
 
-		int a = _outFileStream.tellp();
 		_outFileStream.flush();
 		_outFileStream.write(endingChars.c_str(), endingChars.size());
 	}
@@ -132,7 +133,8 @@ void DatabaseOperation::writeToDB() {
 	}
 }
 
-void ShowCollege(std::shared_ptr<College> collegePtr) {
+//shows college record data
+void DatabaseOperation::ShowCollege(std::shared_ptr<College> collegePtr) {
 	std::cout << "Printing college " << collegePtr->getName().data() << std::endl;
 	std::cout << "Number of employees: " << collegePtr->getNofEmployees() << std::endl;
 	std::cout << "Employees: " << std::endl;
@@ -146,6 +148,8 @@ void ShowCollege(std::shared_ptr<College> collegePtr) {
 		std::cout << "Experience in teaching: " << emps[i].experienceInTeaching() << std::endl;
 	}
 
+	std::cout << std::endl;
+
 	std::cout << "Number of students: " << collegePtr->getNofStudents() << std::endl;
 	std::cout << "Students: " << std::endl;
 	
@@ -158,6 +162,8 @@ void ShowCollege(std::shared_ptr<College> collegePtr) {
 		std::cout << "Year of birth: " << studs[i].yearOfBirth() << std::endl;
 		std::cout << "Year of learning: " << studs[i].yearOfLearning() << std::endl;
 	}
+
+	std::cout << std::endl;
 }
 
 
@@ -197,9 +203,10 @@ void DatabaseOperation::readFromDB()
 
 			if (endingChars.size() > 0)
 				typeOfRecord = endingChars[posOfData++];
-			else
+			else {
 				std::cerr << "No data to read" << std::endl;
-
+				return;
+			}
 			switch (typeOfRecord)
 			{
 			case 'e':
@@ -225,7 +232,7 @@ void DatabaseOperation::readFromDB()
 			case 'c':
 			{
 				std::shared_ptr<College> college = read<College>(i);
-				ShowCollege(college);
+				DatabaseOperation::ShowCollege(college);
 
 				i += college->getNofEmployees() * sizeof(Employee);
 				i += college->getNofStudents() * sizeof(Student);

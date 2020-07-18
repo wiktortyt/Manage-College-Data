@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <filesystem>
+#include "College.h"
 
 class DatabaseOperation {
 	std::filesystem::path _DBFileName;
@@ -29,6 +30,8 @@ public:
 	void addCollegeToDB();
 
 	void readFromDB();
+
+	void ShowCollege(std::shared_ptr<College> collegePtr);
 
 	template<typename T>
 	std::shared_ptr<T> read(int posOfData);

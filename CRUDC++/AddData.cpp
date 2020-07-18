@@ -11,6 +11,7 @@
 inline Employee addEmployee() {
 	std::array< char, 100> name, surname;
 	unsigned short yearOfBirth, experienceInTeaching;
+	std::cout << "Adding employee: " << std::endl;
 	std::cout << "Name: ";
 	std::cin >> name.data();
 	std::cout << "Surname: ";
@@ -19,6 +20,7 @@ inline Employee addEmployee() {
 	std::cin >> yearOfBirth;
 	std::cout << "Experience in teaching(years): ";
 	std::cin >> experienceInTeaching;
+	std::cout << std::endl;
 	if (std::cin.fail()) {
 		std::cerr << "You entered something wrong" << std::endl;
 		return Employee(-1, std::array<char, 100>(), std::array<char, 100>(), -1);
@@ -48,6 +50,7 @@ void DatabaseOperation::addEmployeeToDB()
 inline Student addStudent() {
 	std::array< char, 100> name, surname;
 	unsigned short yearOfBirth, yearOfLearning;
+	std::cout << "Adding student: " << std::endl;
 	std::cout << "Name: ";
 	std::cin >> name.data();
 	std::cout << "Surname: ";
@@ -56,6 +59,7 @@ inline Student addStudent() {
 	std::cin >> yearOfBirth;
 	std::cout << "Year of learning: ";
 	std::cin >> yearOfLearning;
+	std::cout << std::endl;
 	if (std::cin.fail()) {
 		std::cerr << "You entered something wrong" << std::endl;
 		return Student();
@@ -90,6 +94,7 @@ inline College addCollege() {
 	std::cin >> NofStudents;
 	std::cout << "Name of college: ";
 	std::cin >> name.data();
+	std::cout << std::endl;
 
 	if (std::cin.fail()) {
 		std::cerr << "Wrong number!" << std::endl;

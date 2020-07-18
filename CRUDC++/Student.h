@@ -11,10 +11,6 @@ public:
 		: Person(name, surname, yearOfBirth), _yearOfLearning(yearOfLearning) {}
 	Student() = default;
 
-	/*Student(Student&& st) = default;
-	Student(const Student& st) = default;*/
-
-
 
 	unsigned short yearOfLearning() const {
 		return _yearOfLearning;
