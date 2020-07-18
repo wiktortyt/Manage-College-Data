@@ -14,15 +14,15 @@ public:
 
 	}
 
-	std::array< char, 100> name() {
+	std::array< char, 100> name() const {
 		return _name;
 	}
 
-	std::array< char, 100> surname() {
+	std::array< char, 100> surname() const {
 		return _surname;
 	}
 
-	unsigned short yearOfBirth() {
+	unsigned short yearOfBirth() const {
 		return _yearOfBirth;
 	}
 };

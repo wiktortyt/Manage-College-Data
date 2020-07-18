@@ -1,9 +1,39 @@
 #include "DatabaseOperation.h"
 #include "Employee.h"
 #include "Student.h"
+#include "College.h"
 
 #include <iostream>
 #include <memory>
+
+template<>
+std::shared_ptr<College> DatabaseOperation::read(int posOfData) {
+	if (_inFileStream.good() && posOfData >= 0) {
+		std::shared_ptr<College> college=std::make_shared<College>(College());
+		_inFileStream.seekg(posOfData,std::ios::beg);
+		_inFileStream >> *college;
+		return college;
+	}
+	else {
+		std::cerr << "Something went wrong" << std::endl;
+		return nullptr;
+	}
+}
+
+template<typename T>
+std::shared_ptr<T> DatabaseOperation::read(int posOfData)
+{
+	if (_inFileStream.good() && posOfData >= 0) {
+		_inFileStream.seekg(posOfData, std::ios::beg);
+		std::shared_ptr<T> baseData = std::make_shared<T>(T());
+		_inFileStream.read(reinterpret_cast<char*>(baseData.get()), sizeof(T));
+		return baseData;
+	}
+	else {
+		std::cerr << "Something went wrong" << std::endl;
+		return nullptr;
+	}
+}
 
 DatabaseOperation::DatabaseOperation(DatabaseOperation&& dbOp) noexcept
 	: _DBFileName(std::move(dbOp._DBFileName)),
@@ -79,12 +109,16 @@ void DatabaseOperation::writeToDB() {
 			//switching your choice
 			switch (choice) {
 			case 0:
-				addEmployee();
+				addEmployeeToDB();
 				endingChars += "e";
 				break;
 			case 1:
-				addStudent();
+				addStudentToDB();
 				endingChars += "s";
+				break;
+			case 2:
+				addCollegeToDB();
+				endingChars += "c";
 				break;
 			}
 		} while (choice != -1);
@@ -98,75 +132,44 @@ void DatabaseOperation::writeToDB() {
 	}
 }
 
-void DatabaseOperation::addEmployee()
-{
-	if (_outFileStream.good()) {
-		std::array< char, 100> name, surname;
-		unsigned short yearOfBirth, experienceInTeaching;
-		std::cout << "Name: ";
-		std::cin >> name.data();
-		std::cout << "Surname: ";
-		std::cin >> surname.data();
-		std::cout << "Year of birth: ";
-		std::cin >> yearOfBirth;
-		std::cout << "Experience in teaching(years): ";
-		std::cin >> experienceInTeaching;
-		if (std::cin.fail()) {
-			std::cerr << "You entered something wrong" << std::endl;
-			return;
-		}
-		std::unique_ptr<Employee> employeePtr = std::make_unique<Employee>(Employee(experienceInTeaching, name, surname, yearOfBirth));
+void ShowCollege(std::shared_ptr<College> collegePtr) {
+	std::cout << "Printing college " << collegePtr->getName().data() << std::endl;
+	std::cout << "Number of employees: " << collegePtr->getNofEmployees() << std::endl;
+	std::cout << "Employees: " << std::endl;
+	std::vector<Employee> emps = collegePtr->getEmployees();
 
-		int a = _outFileStream.tellp();
-		_outFileStream.write(reinterpret_cast<char*>(employeePtr.get()), sizeof(Employee));
-		if (_outFileStream.good())
-			std::cout << "Employee written!" << std::endl;
-		else
-			std::cerr << "Something went bad with writing employee!" << std::endl;
+	for (size_t i = 0; i < collegePtr->getNofEmployees(); i++)
+	{
+		std::cout << "Name: " << emps[i].name().data() << std::endl;
+		std::cout << "Surname: " << emps[i].surname().data() << std::endl;
+		std::cout << "Year of birth: " << emps[i].yearOfBirth() << std::endl;
+		std::cout << "Experience in teaching: " << emps[i].experienceInTeaching() << std::endl;
 	}
-	else {
-		std::cerr << "Bad file stream" << std::endl;
+
+	std::cout << "Number of students: " << collegePtr->getNofStudents() << std::endl;
+	std::cout << "Students: " << std::endl;
+	
+	std::vector<Student> studs = collegePtr->getStudents();
+
+	for (size_t i = 0; i < collegePtr->getNofStudents(); i++)
+	{
+		std::cout << "Name: " << studs[i].name().data() << std::endl;
+		std::cout << "Surname: " << studs[i].surname().data() << std::endl;
+		std::cout << "Year of birth: " << studs[i].yearOfBirth() << std::endl;
+		std::cout << "Year of learning: " << studs[i].yearOfLearning() << std::endl;
 	}
 }
 
-void DatabaseOperation::addStudent()
-{
-	if (_outFileStream.good()) {
-		std::array< char, 100> name, surname;
-		unsigned short yearOfBirth, yearOfLearning;
-		std::cout << "Name: ";
-		std::cin >> name.data();
-		std::cout << "Surname: ";
-		std::cin >> surname.data();
-		std::cout << "Year of birth: ";
-		std::cin >> yearOfBirth;
-		std::cout << "Year of learning: ";
-		std::cin >> yearOfLearning;
-		if (std::cin.fail()) {
-			std::cerr << "You entered something wrong" << std::endl;
-			return;
-		}
-		std::unique_ptr<Student> studentPtr = std::make_unique<Student>(Student(yearOfLearning, name, surname, yearOfBirth));
-		_outFileStream.write(reinterpret_cast<char*>(studentPtr.get()), sizeof(Student));
-		if (_outFileStream.good())
-			std::cout << "Employee written!" << std::endl;
-		else
-			std::cerr << "Something went bad with writing employee!" << std::endl;
-	}
-	else {
-		std::cerr << "Bad file stream" << std::endl;
-	}
-}
 
 void DatabaseOperation::readFromDB()
 {
 	if (_inFileStream.good()) {
-		//at the end of file there is string of chars what is int the file
-		_inFileStream.seekg(-1,std::ios::end);
+		//at the end of file there is string of chars what is in the file
+		_inFileStream.seekg(0,std::ios::end);
 		int size = _inFileStream.tellg();
 		int pos = -1;
-		//searching for begging of ending characters
-		for (int i = 1; i <= size; i++)
+		//searching for begining of ending characters
+		for (int i = 1; i < size; i++)
 		{
 			_inFileStream.seekg(-i, std::ios::end);
 			char c = static_cast<char>(_inFileStream.get());
@@ -178,7 +181,7 @@ void DatabaseOperation::readFromDB()
 		_inFileStream.seekg(pos, std::ios::beg);
 		//reading ending characters
 		std::string endingChars = "";
-		for (size_t i = pos; i <= size; i++)
+		for (size_t i = pos; i < size; i++)
 		{
 			char c = static_cast<char>(_inFileStream.get());
 			endingChars += c;
@@ -186,7 +189,7 @@ void DatabaseOperation::readFromDB()
 
 		//position of record which we read(in endingChars)
 		int posOfData = 0;
-		//reading data until end of employee objects
+		//reading data until end of objects
 		for (int i = 0; i < size - endingChars.size() -1;)
 		{
 			_inFileStream.seekg(i, std::ios::beg);
@@ -206,34 +209,45 @@ void DatabaseOperation::readFromDB()
 				std::cout << "Experience in teaching: " << employee->experienceInTeaching() << std::endl;
 				std::cout << "Name: " << employee->name().data() << std::endl;
 				std::cout << "Surname: " << employee->surname().data() << std::endl;
-				std::cout << "Year of birth: " << employee->yearOfBirth() << std::endl;
+				std::cout << "Year of birth: " << employee->yearOfBirth() << std::endl << std::endl;;
 			}
 				break;
+			case 's':
+			{
+				std::shared_ptr<Student> student = read<Student>(i);
+				i += sizeof(Student);
+				std::cout << "Year of learning: " << student->yearOfLearning() << std::endl;
+				std::cout << "Name: " << student->name().data() << std::endl;
+				std::cout << "Surname: " << student->surname().data() << std::endl;
+				std::cout << "Year of birth: " << student->yearOfBirth() << std::endl << std::endl;;
+			}
+				break;
+			case 'c':
+			{
+				std::shared_ptr<College> college = read<College>(i);
+				ShowCollege(college);
+
+				i += college->getNofEmployees() * sizeof(Employee);
+				i += college->getNofStudents() * sizeof(Student);
+				i += college->getName().size();
+				//stores sizes of vectors of employees and students
+				i += 2 * sizeof(size_t);
+				//sizes of name and surname of students and employees
+				i += 2 * sizeof(size_t) * college->getNofEmployees();
+				i += 2 * sizeof(size_t) * college->getNofStudents();
+				break;
+			}
 			default:
-				std::cerr << "Wrong type of record" << std::endl;
+				std::cerr << "Wrong type of record in file" << std::endl;
 				break;
 			}
 		}
 	}
 	else {
-		std::cerr << "Sometnig went wrong with input file" << std::endl;
+		std::cerr << "Somethig went wrong with input file" << std::endl;
 	}
 }
 
-template<typename T>
-std::shared_ptr<T> DatabaseOperation::read(int posOfData)
-{
-	if (_inFileStream.good() && posOfData >= 0) {
-		_inFileStream.seekg(posOfData, std::ios::beg);
-		std::shared_ptr<T> baseData = std::make_shared<T>(Employee());
-		_inFileStream.read(reinterpret_cast<char*>(baseData.get()), sizeof(T));
-		return baseData;
-	}
-	else {
-		std::cerr << "Something went wrong" << std::endl;
-		return nullptr;
-	}
-}
 
 DatabaseOperation::~DatabaseOperation() {
 	_outFileStream.close();

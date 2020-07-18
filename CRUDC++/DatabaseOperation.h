@@ -22,9 +22,11 @@ public:
 
 	void writeToDB();
 
-	void addEmployee();
+	void addEmployeeToDB();
 
-	void addStudent();
+	void addStudentToDB();
+
+	void addCollegeToDB();
 
 	void readFromDB();
 

@@ -143,6 +143,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AddData.cpp" />
+    <ClCompile Include="College.cpp" />
     <ClCompile Include="CRUDC++.cpp" />
     <ClCompile Include="DatabaseOperation.cpp" />
   </ItemGroup>

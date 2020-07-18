@@ -24,6 +24,12 @@
     <ClCompile Include="DatabaseOperation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="AddData.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="College.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="College.h">
