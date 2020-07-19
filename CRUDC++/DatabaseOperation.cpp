@@ -48,7 +48,7 @@ DatabaseOperation::DatabaseOperation(std::filesystem::path DBFileName,std::ios_b
 	//using ios::in to not erase file
 	_outFileStream.open(DBFileName,openMode | std::ios::in | std::ios::out);
 	//erasing ios::ate to not erase file
-	int openModeForInStream = _openMode & (~std::ios::ate);
+	std::ios_base::openmode openModeForInStream = _openMode & (~std::ios::ate);
 	_inFileStream.open(DBFileName, openModeForInStream);
 }
 
